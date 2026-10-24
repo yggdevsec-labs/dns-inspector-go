@@ -1,0 +1,23 @@
+
+{
+  "name": "DNS Inspector - Go Development",
+  "build": {
+    "dockerfile": "Dockerfile",
+    "context": ".."
+  },
+  "workspaceFolder": "/workspace",
+  "workspaceMount": "source=${localWorkspaceFolder},target=/workspace,type=bind",
+  "remoteUser": "developer",
+  "customizations": {
+    "vscode": {
+      "extensions": [
+        "golang.Go"
+      ],
+      "settings": {
+        "go.useLanguageServer": true,
+        "editor.formatOnSave": true
+       
+      }
+    }
+  }
+}
