@@ -1,4 +1,3 @@
-
 package dns_test
 
 import (
