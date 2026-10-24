@@ -26,8 +26,8 @@ RUN GOBIN=/usr/local/bin \
     go install golang.org/x/vuln/cmd/govulncheck@v1.9.0
 
 RUN useradd -m -s /bin/bash developer && \
-    mkdir -p /workspace /home/developer/go && \
-    chown -R developer:developer /workspace /home/developer/go
+    mkdir -p /workspace /home/developer/go /home/developer/.cache/go-build && \
+    chown -R developer:developer /workspace /home/developer
 
 USER developer
 
