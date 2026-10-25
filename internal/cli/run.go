@@ -1,4 +1,3 @@
-
 package cli
 
 import (
@@ -16,14 +15,14 @@ const lookupTimeout = 5 * time.Second
 
 // Run executes a DNS lookup and returns an exit code.
 func Run(args []string, output, errorOutput io.Writer, resolver dns.IPResolver) int {
-	recordType := "A"
+	recordType := dns.RecordTypeA
 	var domain string
 
 	switch {
 	case len(args) == 1:
 		domain = args[0]
 	case len(args) == 3 && args[0] == "--type":
-		recordType = strings.ToUpper(args[1])
+		recordType = dns.RecordType(strings.ToUpper(args[1]))
 		domain = args[2]
 	default:
 		_, _ = fmt.Fprintln(errorOutput, "Usage: dns-inspector <domain>")
@@ -35,8 +34,13 @@ func Run(args []string, output, errorOutput io.Writer, resolver dns.IPResolver) 
 		return 2
 	}
 
-	if recordType != "A" && recordType != "AAAA" {
-		_, _ = fmt.Fprintln(errorOutput, "Unsupported record type: use A or AAAA")
+	if recordType != dns.RecordTypeA && recordType != dns.RecordTypeAAAA {
+		_, _ = fmt.Fprintf(
+			errorOutput,
+			"Unsupported record type: use %s or %s\n",
+			dns.RecordTypeA,
+			dns.RecordTypeAAAA,
+		)
 		return 2
 	}
 
@@ -46,7 +50,7 @@ func Run(args []string, output, errorOutput io.Writer, resolver dns.IPResolver) 
 	var addresses []net.IP
 	var err error
 
-	if recordType == "AAAA" {
+	if recordType == dns.RecordTypeAAAA {
 		addresses, err = dns.LookupAAAA(ctx, resolver, domain)
 	} else {
 		addresses, err = dns.LookupA(ctx, resolver, domain)
