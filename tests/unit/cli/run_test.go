@@ -163,3 +163,35 @@ func TestRunNoRecords(t *testing.T) {
 		t.Errorf("expected %q, got %q", expected, errorOutput.String())
 	}
 }
+
+type failingWriter struct{}
+
+func (failingWriter) Write([]byte) (int, error) {
+	return 0, errors.New("write failed")
+}
+
+func TestRunOutputFailure(t *testing.T) {
+	var errorOutput bytes.Buffer
+
+	resolver := mockResolver{
+		lookup: func(context.Context, string, string) ([]net.IP, error) {
+			return []net.IP{net.ParseIP("192.0.2.1")}, nil
+		},
+	}
+
+	code := cli.Run(
+		[]string{"example.com"},
+		failingWriter{},
+		&errorOutput,
+		resolver,
+	)
+
+	if code != 1 {
+		t.Errorf("expected exit code 1, got %d", code)
+	}
+
+	expected := "Output failed: write failed\n"
+	if errorOutput.String() != expected {
+		t.Errorf("expected %q, got %q", expected, errorOutput.String())
+	}
+}
