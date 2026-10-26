@@ -1,11 +1,12 @@
 # DNS Inspector (Go)
 
-A lightweight CLI for inspecting public DNS records. Built for technical OSINT and DNS troubleshooting.
+A lightweight CLI for inspecting DNS records. Built for technical OSINT and DNS troubleshooting.
 
 ## Features
 
 - **A** (IPv4) and **AAAA** (IPv6) lookups
-- Five-second lookup timeout and explicit exit codes
+- Five-second lookup timeout
+- Exit codes: **0** for success, **1** for lookup, output, or no-record errors, and **2** for usage errors or unsupported record types
 - No external dependencies for DNS resolution
 
 MX, NS, TXT, CNAME and JSON output are planned, not yet implemented.
