@@ -129,8 +129,9 @@ func TestRunAAAAResolverError(t *testing.T) {
 
 func TestRunUnsupportedRecordType(t *testing.T) {
 	recordTypes := []string{
-		string(dns.RecordTypeMX),
+		string(dns.RecordTypeNS),
 		string(dns.RecordTypeTXT),
+		string(dns.RecordTypeCNAME),
 		"INVALID",
 	}
 
@@ -156,7 +157,7 @@ func TestRunUnsupportedRecordType(t *testing.T) {
 				t.Errorf("expected exit code 2, got %d", code)
 			}
 
-			expected := "Unsupported record type: use A or AAAA\n"
+			expected := "Unsupported record type: use A, AAAA or MX\n"
 			if errorOutput.String() != expected {
 				t.Errorf("expected %q, got %q", expected, errorOutput.String())
 			}

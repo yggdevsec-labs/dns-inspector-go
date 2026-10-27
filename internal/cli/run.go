@@ -34,18 +34,43 @@ func Run(args []string, output, errorOutput io.Writer, resolver dns.IPResolver) 
 		return 2
 	}
 
-	if recordType != dns.RecordTypeA && recordType != dns.RecordTypeAAAA {
-		_, _ = fmt.Fprintf(
-			errorOutput,
-			"Unsupported record type: use %s or %s\n",
-			dns.RecordTypeA,
-			dns.RecordTypeAAAA,
-		)
+	switch recordType {
+	case dns.RecordTypeA, dns.RecordTypeAAAA, dns.RecordTypeMX:
+	default:
+		_, _ = fmt.Fprintln(errorOutput, "Unsupported record type: use A, AAAA or MX")
 		return 2
 	}
 
 	ctx, cancel := context.WithTimeout(context.Background(), lookupTimeout)
 	defer cancel()
+
+	if recordType == dns.RecordTypeMX {
+		mxResolver, ok := resolver.(dns.MXResolver)
+		if !ok {
+			_, _ = fmt.Fprintln(errorOutput, "DNS lookup failed: resolver does not support MX lookups")
+			return 1
+		}
+
+		records, err := dns.LookupMX(ctx, mxResolver, domain)
+		if err != nil {
+			_, _ = fmt.Fprintf(errorOutput, "DNS lookup failed: %v\n", err)
+			return 1
+		}
+
+		if len(records) == 0 {
+			_, _ = fmt.Fprintln(errorOutput, "No MX records found")
+			return 1
+		}
+
+		for _, record := range records {
+			if _, err := fmt.Fprintf(output, "%d %s\n", record.Pref, record.Host); err != nil {
+				_, _ = fmt.Fprintf(errorOutput, "Output failed: %v\n", err)
+				return 1
+			}
+		}
+
+		return 0
+	}
 
 	var addresses []net.IP
 	var err error

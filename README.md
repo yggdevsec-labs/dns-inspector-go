@@ -1,52 +1,61 @@
-
 > **Status: Work in Progress (WIP)**
 >
-> This project is under active development.
-> Features and functionality may change.
+> This project is under active development. Features may change.
 
 # DNS Inspector (Go)
 
-A lightweight CLI for inspecting DNS records. Built for technical OSINT and DNS troubleshooting.
+A lightweight DNS inspection CLI for technical OSINT and DNS troubleshooting.
 
 ## Features
 
-- **A** (IPv4) and **AAAA** (IPv6) lookups
-- Five-second lookup timeout
-- Exit codes: **0** for success, **1** for lookup, output, or no-record errors, and **2** for usage errors or unsupported record types
-- No external dependencies for DNS resolution
+- **A** (IPv4), **AAAA** (IPv6), and **MX** (mail server) lookups
+- Five-second DNS lookup timeout
+- Exit codes: `0` success, `1` lookup/output/no-record error, `2` invalid arguments
+- DNS resolution using Go's standard library
 
-MX, NS, TXT, CNAME and JSON output are planned, not yet implemented.
+NS, TXT, CNAME, and JSON output are planned.
 
+## Usage
 
 ```bash
 go run ./cmd/dns-inspector example.com
-go run ./cmd/dns-inspector --type A example.com
 go run ./cmd/dns-inspector --type AAAA example.com
+go run ./cmd/dns-inspector --type MX example.com
 ```
 
-Build a standalone binary:
+Build a standalone binary (Docker not required):
 
 ```bash
 go build -o dns-inspector ./cmd/dns-inspector
-./dns-inspector example.com
+./dns-inspector --type MX example.com
 ```
 
-## Development
+## Development with Docker (optional)
 
-Install the Go version specified in `go.mod`, or use the **optional** Docker development environment.
+Requires a Docker-compatible container engine and Docker CLI. Docker Desktop and VS Code are **not** required. Run from the repository root in a Bash-compatible shell:
 
 ```bash
+# Verify the container engine
+docker info
+
+# Build the development image
 docker build -f .devcontainer/Dockerfile -t dns-inspector-go-dev .
-docker run --rm -it --mount type=bind,source="$(pwd)",target=/workspace dns-inspector-go-dev
+
+# Start the container with the project mounted
+docker run --rm -it \
+  --mount type=bind,source="$(pwd)",target=/workspace \
+  dns-inspector-go-dev
 ```
 
-Run formatting, tests with race detection, and linting:
+Inside the container, run all local checks:
 
 ```bash
 ./scripts/check.sh
 ```
 
-The script formats Go files in place. Review changes before committing.
+The script formats Go files, runs tests with race detection, and runs golangci-lint. Formatting may modify source files. Run `exit` to leave the container; the source files remain on the host.
+
+Docker is only for development; users can build and run the CLI with Go or use a compiled binary.
 
 ## CI
 
@@ -54,4 +63,4 @@ GitHub Actions checks formatting, linting, tests, vulnerabilities (govulncheck),
 
 ## Scope
 
-DNS Inspector performs standard DNS lookups. It does not perform port scanning, brute-forcing, or automated subdomain enumeration.
+Standard DNS lookups only. No port scanning, brute-forcing, or automated subdomain enumeration.
