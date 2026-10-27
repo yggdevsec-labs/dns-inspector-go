@@ -1,3 +1,8 @@
+> **Status: Work in Progress (WIP)**
+>
+> This project is under active development.
+> Features and functionality may change.
+
 # DNS Inspector (Go)
 
 A lightweight CLI for inspecting DNS records. Built for technical OSINT and DNS troubleshooting.
