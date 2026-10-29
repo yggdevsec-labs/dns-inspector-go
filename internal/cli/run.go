@@ -35,9 +35,9 @@ func Run(args []string, output, errorOutput io.Writer, resolver dns.IPResolver) 
 	}
 
 	switch recordType {
-	case dns.RecordTypeA, dns.RecordTypeAAAA, dns.RecordTypeMX:
+	case dns.RecordTypeA, dns.RecordTypeAAAA, dns.RecordTypeMX, dns.RecordTypeNS:
 	default:
-		_, _ = fmt.Fprintln(errorOutput, "Unsupported record type: use A, AAAA or MX")
+		_, _ = fmt.Fprintln(errorOutput, "Unsupported record type: use A, AAAA, MX or NS")
 		return 2
 	}
 
@@ -64,6 +64,34 @@ func Run(args []string, output, errorOutput io.Writer, resolver dns.IPResolver) 
 
 		for _, record := range records {
 			if _, err := fmt.Fprintf(output, "%d %s\n", record.Pref, record.Host); err != nil {
+				_, _ = fmt.Fprintf(errorOutput, "Output failed: %v\n", err)
+				return 1
+			}
+		}
+
+		return 0
+	}
+
+	if recordType == dns.RecordTypeNS {
+		nsResolver, ok := resolver.(dns.NSResolver)
+		if !ok {
+			_, _ = fmt.Fprintln(errorOutput, "DNS lookup failed: resolver does not support NS lookups")
+			return 1
+		}
+
+		records, err := dns.LookupNS(ctx, nsResolver, domain)
+		if err != nil {
+			_, _ = fmt.Fprintf(errorOutput, "DNS lookup failed: %v\n", err)
+			return 1
+		}
+
+		if len(records) == 0 {
+			_, _ = fmt.Fprintln(errorOutput, "No NS records found")
+			return 1
+		}
+
+		for _, record := range records {
+			if _, err := fmt.Fprintln(output, record.Host); err != nil {
 				_, _ = fmt.Fprintf(errorOutput, "Output failed: %v\n", err)
 				return 1
 			}

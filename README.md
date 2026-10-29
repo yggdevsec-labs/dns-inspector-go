@@ -8,12 +8,12 @@ A lightweight DNS inspection CLI for technical OSINT and DNS troubleshooting.
 
 ## Features
 
-- **A** (IPv4), **AAAA** (IPv6), and **MX** (mail server) lookups
+- **A** (IPv4), **AAAA** (IPv6), **MX** (mail servers), and **NS** (name servers) lookups
 - Five-second DNS lookup timeout
 - Exit codes: `0` success, `1` lookup/output/no-record error, `2` invalid arguments
 - DNS resolution using Go's standard library
 
-NS, TXT, CNAME, and JSON output are planned.
+TXT, CNAME, and JSON output are planned.
 
 ## Usage
 
@@ -21,13 +21,14 @@ NS, TXT, CNAME, and JSON output are planned.
 go run ./cmd/dns-inspector example.com
 go run ./cmd/dns-inspector --type AAAA example.com
 go run ./cmd/dns-inspector --type MX example.com
+go run ./cmd/dns-inspector --type NS example.com
 ```
 
 Build a standalone binary (Docker not required):
 
 ```bash
 go build -o dns-inspector ./cmd/dns-inspector
-./dns-inspector --type MX example.com
+./dns-inspector --type NS example.com
 ```
 
 ## Development with Docker (optional)
@@ -53,7 +54,7 @@ Inside the container, run all local checks:
 ./scripts/check.sh
 ```
 
-The script formats Go files, runs tests with race detection, and runs golangci-lint. Formatting may modify source files. Run `exit` to leave the container; the source files remain on the host.
+The script formats Go files, runs tests with race detection, and runs golangci-lint. Formatting may modify source files. Run `exit` to leave the container; source files remain on the host.
 
 Docker is only for development; users can build and run the CLI with Go or use a compiled binary.
 
