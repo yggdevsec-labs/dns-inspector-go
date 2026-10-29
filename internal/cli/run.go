@@ -122,7 +122,7 @@ func Run(args []string, output, errorOutput io.Writer, resolver dns.IPResolver) 
 		}
 
 		for _, record := range records {
-			if _, err := fmt.Fprintln(output, record); err != nil {
+			if _, err := fmt.Fprintf(output, "%q\n", record); err != nil {
 				_, _ = fmt.Fprintf(errorOutput, "Output failed: %v\n", err)
 				return 1
 			}
