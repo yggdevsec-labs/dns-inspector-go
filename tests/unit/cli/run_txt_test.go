@@ -42,13 +42,13 @@ func TestRunTXT(t *testing.T) {
 			name:       "uppercase",
 			recordType: "TXT",
 			records:    []string{"v=spf1 -all", "verification=abc"},
-			wantOutput: "v=spf1 -all\nverification=abc\n",
+			wantOutput: "\"v=spf1 -all\"\n\"verification=abc\"\n",
 		},
 		{
 			name:       "lowercase",
 			recordType: "txt",
 			records:    []string{"v=spf1 -all"},
-			wantOutput: "v=spf1 -all\n",
+			wantOutput: "\"v=spf1 -all\"\n",
 		},
 		{
 			name:       "no records",
@@ -70,6 +70,12 @@ func TestRunTXT(t *testing.T) {
 			wantError:  "Output failed: write failed\n",
 			wantCode:   1,
 			failOutput: true,
+		},
+		{
+			name:       "escape terminal control characters",
+			recordType: "TXT",
+			records:    []string{"safe\x1b[31mred\nsecond line"},
+			wantOutput: "\"safe\\x1b[31mred\\nsecond line\"\n",
 		},
 	}
 
