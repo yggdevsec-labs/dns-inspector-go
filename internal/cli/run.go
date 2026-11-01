@@ -36,10 +36,10 @@ func Run(args []string, output, errorOutput io.Writer, resolver dns.IPResolver) 
 
 	switch recordType {
 	case dns.RecordTypeA, dns.RecordTypeAAAA, dns.RecordTypeMX,
-		dns.RecordTypeNS, dns.RecordTypeTXT:
+		dns.RecordTypeNS, dns.RecordTypeTXT, dns.RecordTypeCNAME:
 	default:
 		_, _ = fmt.Fprintln(errorOutput,
-			"Unsupported record type: use A, AAAA, MX, NS or TXT")
+			"Unsupported record type: use A, AAAA, MX, NS, TXT or CNAME")
 		return 2
 	}
 
@@ -126,6 +126,36 @@ func Run(args []string, output, errorOutput io.Writer, resolver dns.IPResolver) 
 				_, _ = fmt.Fprintf(errorOutput, "Output failed: %v\n", err)
 				return 1
 			}
+		}
+
+		return 0
+	}
+
+	if recordType == dns.RecordTypeCNAME {
+		cnameResolver, ok := resolver.(dns.CNAMEResolver)
+		if !ok {
+			_, _ = fmt.Fprintln(errorOutput,
+				"DNS lookup failed: resolver does not support CNAME lookups")
+			return 1
+		}
+
+		cname, err := dns.LookupCNAME(ctx, cnameResolver, domain)
+		if err != nil {
+			_, _ = fmt.Fprintf(errorOutput, "DNS lookup failed: %v\n", err)
+			return 1
+		}
+
+		if strings.EqualFold(
+			strings.TrimSuffix(cname, "."),
+			strings.TrimSuffix(domain, "."),
+		) {
+			_, _ = fmt.Fprintln(errorOutput, "No CNAME alias found")
+			return 1
+		}
+
+		if _, err := fmt.Fprintf(output, "%q\n", cname); err != nil {
+			_, _ = fmt.Fprintf(errorOutput, "Output failed: %v\n", err)
+			return 1
 		}
 
 		return 0
