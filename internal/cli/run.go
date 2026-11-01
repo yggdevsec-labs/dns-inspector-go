@@ -43,6 +43,10 @@ func Run(args []string, output, errorOutput io.Writer, resolver dns.IPResolver) 
 		return 2
 	}
 
+	if err := dns.ValidateDomain(domain); err != nil {
+		_, _ = fmt.Fprintf(errorOutput, "Invalid domain: %v\n", err)
+		return 2
+	}
 	ctx, cancel := context.WithTimeout(context.Background(), lookupTimeout)
 	defer cancel()
 
