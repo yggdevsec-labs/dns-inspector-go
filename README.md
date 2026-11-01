@@ -8,12 +8,12 @@ A lightweight DNS inspection CLI for technical OSINT and DNS troubleshooting.
 
 ## Features
 
-- **A** (IPv4), **AAAA** (IPv6), **MX** (mail servers), **NS** (name servers), and **TXT** lookups
+- **A** (IPv4), **AAAA** (IPv6), **MX** (mail servers), **NS** (name servers), **TXT**, and **CNAME** lookups
 - Five-second DNS lookup timeout
 - Exit codes: `0` success, `1` lookup/output/no-record error, `2` invalid arguments
 - DNS resolution using Go's standard library
 
-CNAME lookup and JSON output are planned.
+JSON output are planned.
 
 ## Usage
 
@@ -23,7 +23,10 @@ go run ./cmd/dns-inspector --type AAAA example.com
 go run ./cmd/dns-inspector --type MX example.com
 go run ./cmd/dns-inspector --type NS example.com
 go run ./cmd/dns-inspector --type TXT example.com
+go run ./cmd/dns-inspector --type CNAME www.example.com
 ```
+CNAME lookups display the canonical target name. If the resolved name
+matches the queried domain, the CLI reports that no CNAME alias was found.
 
 Build a standalone binary (Docker not required):
 
@@ -40,7 +43,7 @@ Requires a Docker-compatible container engine and Docker CLI. Docker Desktop and
 docker info
 docker build -f .devcontainer/Dockerfile -t dns-inspector-go-dev .
 docker run --rm -it \
-  --mount type=bind,source="$(pwd)",target=/workspace \
+  --mount "type=bind,source=$PWD,target=/workspace" \
   dns-inspector-go-dev
 ```
 
