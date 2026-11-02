@@ -80,19 +80,19 @@ func Run(args []string, output, errorOutput io.Writer, resolver dns.IPResolver) 
 			return 1
 		}
 
-		for _, record := range records {
-			if _, err := fmt.Fprintf(output, "%d %s\n", record.Pref, record.Host); err != nil {
-				_, _ = fmt.Fprintf(errorOutput, "Output failed: %v\n", err)
-				return 1
-			}
-		}
-
 		if jsonOutput {
 			values := make([]string, 0, len(records))
 			for _, record := range records {
 				values = append(values, fmt.Sprintf("%d %s", record.Pref, record.Host))
 			}
 			return writeJSON(output, errorOutput, domain, recordType, values)
+		}
+
+		for _, record := range records {
+			if _, err := fmt.Fprintf(output, "%d %s\n", record.Pref, record.Host); err != nil {
+				_, _ = fmt.Fprintf(errorOutput, "Output failed: %v\n", err)
+				return 1
+			}
 		}
 
 		return 0
@@ -116,12 +116,6 @@ func Run(args []string, output, errorOutput io.Writer, resolver dns.IPResolver) 
 			return 1
 		}
 
-		for _, record := range records {
-			if _, err := fmt.Fprintln(output, record.Host); err != nil {
-				_, _ = fmt.Fprintf(errorOutput, "Output failed: %v\n", err)
-				return 1
-			}
-		}
 		if jsonOutput {
 			values := make([]string, 0, len(records))
 			for _, record := range records {
@@ -129,6 +123,14 @@ func Run(args []string, output, errorOutput io.Writer, resolver dns.IPResolver) 
 			}
 			return writeJSON(output, errorOutput, domain, recordType, values)
 		}
+
+		for _, record := range records {
+			if _, err := fmt.Fprintln(output, record.Host); err != nil {
+				_, _ = fmt.Fprintf(errorOutput, "Output failed: %v\n", err)
+				return 1
+			}
+		}
+
 		return 0
 	}
 
@@ -151,15 +153,15 @@ func Run(args []string, output, errorOutput io.Writer, resolver dns.IPResolver) 
 			return 1
 		}
 
+		if jsonOutput {
+			return writeJSON(output, errorOutput, domain, recordType, records)
+		}
+
 		for _, record := range records {
 			if _, err := fmt.Fprintf(output, "%q\n", record); err != nil {
 				_, _ = fmt.Fprintf(errorOutput, "Output failed: %v\n", err)
 				return 1
 			}
-		}
-
-		if jsonOutput {
-			return writeJSON(output, errorOutput, domain, recordType, records)
 		}
 
 		return 0
