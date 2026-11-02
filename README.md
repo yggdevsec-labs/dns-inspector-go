@@ -14,7 +14,14 @@ A lightweight DNS inspection CLI for technical OSINT and DNS troubleshooting.
 - DNS resolution using Go's standard library
 - Optional JSON output (`--json`) for scripting and automation
 
-planning  DNS SOA Lookup
+## Planned Features
+- Refactor CLI `Run()` into smaller, testable functions for argument parsing, DNS lookups, and output formatting.
+- SRV record lookups (service discovery)
+- PTR record lookups (reverse DNS)
+- SOA record lookups (zone authority information)
+- CAA record lookups (certificate authority authorization)
+- CLI help and version flags (`--help`, `--version`)
+
 ## Usage
 
 ```bash
