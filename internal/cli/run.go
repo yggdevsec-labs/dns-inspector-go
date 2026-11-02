@@ -2,13 +2,13 @@ package cli
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
+	"github.com/yggdevsec-labs/dns-inspector-go/internal/dns"
 	"io"
 	"net"
 	"strings"
 	"time"
-
-	"github.com/yggdevsec-labs/dns-inspector-go/internal/dns"
 )
 
 const lookupTimeout = 5 * time.Second
@@ -16,14 +16,26 @@ const lookupTimeout = 5 * time.Second
 // Run executes a DNS lookup and returns an exit code.
 func Run(args []string, output, errorOutput io.Writer, resolver dns.IPResolver) int {
 	recordType := dns.RecordTypeA
+	jsonOutput := false
 	var domain string
 
 	switch {
 	case len(args) == 1:
 		domain = args[0]
+	case len(args) == 2 && args[0] == "--json":
+		jsonOutput = true
+		domain = args[1]
 	case len(args) == 3 && args[0] == "--type":
 		recordType = dns.RecordType(strings.ToUpper(args[1]))
 		domain = args[2]
+	case len(args) == 4 && args[0] == "--type" && args[2] == "--json":
+		recordType = dns.RecordType(strings.ToUpper(args[1]))
+		jsonOutput = true
+		domain = args[3]
+	case len(args) == 4 && args[0] == "--json" && args[1] == "--type":
+		recordType = dns.RecordType(strings.ToUpper(args[2]))
+		jsonOutput = true
+		domain = args[3]
 	default:
 		_, _ = fmt.Fprintln(errorOutput, "Usage: dns-inspector <domain>")
 		return 2
@@ -75,6 +87,14 @@ func Run(args []string, output, errorOutput io.Writer, resolver dns.IPResolver) 
 			}
 		}
 
+		if jsonOutput {
+			values := make([]string, 0, len(records))
+			for _, record := range records {
+				values = append(values, fmt.Sprintf("%d %s", record.Pref, record.Host))
+			}
+			return writeJSON(output, errorOutput, domain, recordType, values)
+		}
+
 		return 0
 	}
 
@@ -102,7 +122,13 @@ func Run(args []string, output, errorOutput io.Writer, resolver dns.IPResolver) 
 				return 1
 			}
 		}
-
+		if jsonOutput {
+			values := make([]string, 0, len(records))
+			for _, record := range records {
+				values = append(values, record.Host)
+			}
+			return writeJSON(output, errorOutput, domain, recordType, values)
+		}
 		return 0
 	}
 
@@ -132,6 +158,10 @@ func Run(args []string, output, errorOutput io.Writer, resolver dns.IPResolver) 
 			}
 		}
 
+		if jsonOutput {
+			return writeJSON(output, errorOutput, domain, recordType, records)
+		}
+
 		return 0
 	}
 
@@ -155,6 +185,10 @@ func Run(args []string, output, errorOutput io.Writer, resolver dns.IPResolver) 
 		) {
 			_, _ = fmt.Fprintln(errorOutput, "No CNAME alias found")
 			return 1
+		}
+
+		if jsonOutput {
+			return writeJSON(output, errorOutput, domain, recordType, []string{cname})
 		}
 
 		if _, err := fmt.Fprintf(output, "%q\n", cname); err != nil {
@@ -184,11 +218,43 @@ func Run(args []string, output, errorOutput io.Writer, resolver dns.IPResolver) 
 		return 1
 	}
 
+	if jsonOutput {
+		values := make([]string, 0, len(addresses))
+		for _, address := range addresses {
+			values = append(values, address.String())
+		}
+		return writeJSON(output, errorOutput, domain, recordType, values)
+	}
+
 	for _, address := range addresses {
 		if _, err := fmt.Fprintln(output, address); err != nil {
 			_, _ = fmt.Fprintf(errorOutput, "Output failed: %v\n", err)
 			return 1
 		}
+	}
+
+	return 0
+}
+
+func writeJSON(
+	output, errorOutput io.Writer,
+	domain string,
+	recordType dns.RecordType,
+	records []string,
+) int {
+	result := struct {
+		Domain  string         `json:"domain"`
+		Type    dns.RecordType `json:"type"`
+		Records []string       `json:"records"`
+	}{
+		Domain:  domain,
+		Type:    recordType,
+		Records: records,
+	}
+
+	if err := json.NewEncoder(output).Encode(result); err != nil {
+		_, _ = fmt.Fprintf(errorOutput, "Output failed: %v\n", err)
+		return 1
 	}
 
 	return 0
