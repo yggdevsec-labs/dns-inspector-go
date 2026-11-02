@@ -12,8 +12,8 @@ A lightweight DNS inspection CLI for technical OSINT and DNS troubleshooting.
 - Five-second DNS lookup timeout
 - Exit codes: `0` success, `1` lookup/output/no-record error, `2` invalid arguments
 - DNS resolution using Go's standard library
+- Optional JSON output (`--json`) for scripting and automation
 
-JSON output are planned.
 
 ## Usage
 
@@ -29,6 +29,32 @@ CNAME lookups display the canonical target name. If the resolved name
 matches the queried domain, the CLI reports that no CNAME alias was found.
 
 Build a standalone binary (Docker not required):
+
+
+### JSON Output
+
+Use `--json` to return structured DNS results.
+
+```bash
+go run ./cmd/dns-inspector --json example.com
+go run ./cmd/dns-inspector --type MX --json example.com
+go run ./cmd/dns-inspector --json --type TXT example.com
+```
+
+Example response:
+
+```json
+{
+  "domain": "example.com",
+  "type": "A",
+  "records": ["192.0.2.1"]
+}
+```
+
+JSON output is supported for A, AAAA, MX, NS, TXT, and CNAME.
+All records are represented as strings. Errors are written to stderr,
+and existing exit codes are preserved.
+
 
 ```bash
 go build -o dns-inspector ./cmd/dns-inspector
