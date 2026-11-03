@@ -14,6 +14,13 @@ A lightweight DNS inspection CLI for technical OSINT and DNS troubleshooting.
 - DNS resolution using Go's standard library
 - Optional JSON output (`--json`) for scripting and automation
 
+## Planned Features
+- Refactor CLI `Run()` into smaller, testable functions for argument parsing, DNS lookups, and output formatting.
+- SRV record lookups (service discovery)
+- PTR record lookups (reverse DNS)
+- SOA record lookups (zone authority information)
+- CAA record lookups (certificate authority authorization)
+- CLI help and version flags (`--help`, `--version`)
 
 ## Usage
 
@@ -31,9 +38,16 @@ matches the queried domain, the CLI reports that no CNAME alias was found.
 Build a standalone binary (Docker not required):
 
 
+```bash
+go build -o dns-inspector ./cmd/dns-inspector
+./dns-inspector --type TXT example.com
+```
+
+
 ### JSON Output
 
 Use `--json` to return structured DNS results.
+
 
 ```bash
 go run ./cmd/dns-inspector --json example.com
@@ -56,10 +70,7 @@ All records are represented as strings. Errors are written to stderr,
 and existing exit codes are preserved.
 
 
-```bash
-go build -o dns-inspector ./cmd/dns-inspector
-./dns-inspector --type TXT example.com
-```
+
 
 ## Development with Docker (optional)
 
