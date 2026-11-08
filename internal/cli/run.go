@@ -15,31 +15,15 @@ const lookupTimeout = 5 * time.Second
 
 // Run executes a DNS lookup and returns an exit code.
 func Run(args []string, output, errorOutput io.Writer, resolver dns.IPResolver) int {
-	recordType := dns.RecordTypeA
-	jsonOutput := false
-	var domain string
-
-	switch {
-	case len(args) == 1:
-		domain = args[0]
-	case len(args) == 2 && args[0] == "--json":
-		jsonOutput = true
-		domain = args[1]
-	case len(args) == 3 && args[0] == "--type":
-		recordType = dns.RecordType(strings.ToUpper(args[1]))
-		domain = args[2]
-	case len(args) == 4 && args[0] == "--type" && args[2] == "--json":
-		recordType = dns.RecordType(strings.ToUpper(args[1]))
-		jsonOutput = true
-		domain = args[3]
-	case len(args) == 4 && args[0] == "--json" && args[1] == "--type":
-		recordType = dns.RecordType(strings.ToUpper(args[2]))
-		jsonOutput = true
-		domain = args[3]
-	default:
+	opts, ok := parseArgs(args)
+	if !ok {
 		_, _ = fmt.Fprintln(errorOutput, "Usage: dns-inspector <domain>")
 		return 2
 	}
+
+	recordType := opts.recordType
+	domain := opts.domain
+	jsonOutput := opts.jsonOutput
 
 	if strings.TrimSpace(domain) == "" {
 		_, _ = fmt.Fprintln(errorOutput, "Usage: dns-inspector <domain>")
