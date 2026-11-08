@@ -1,4 +1,3 @@
-
 package cli
 
 import (
@@ -59,26 +58,8 @@ func Run(args []string, output, errorOutput io.Writer, resolver dns.IPResolver) 
 		return 1
 	}
 
-	if opts.jsonOutput {
-		return writeJSON(output, errorOutput, opts.domain, opts.recordType, records)
-	}
+	return writeOutput(output, errorOutput, opts, records)
 
-	for _, record := range records {
-		var err error
-
-		if opts.recordType == dns.RecordTypeTXT || opts.recordType == dns.RecordTypeCNAME {
-			_, err = fmt.Fprintf(output, "%q\n", record)
-		} else {
-			_, err = fmt.Fprintln(output, record)
-		}
-
-		if err != nil {
-			_, _ = fmt.Fprintf(errorOutput, "Output failed: %v\n", err)
-			return 1
-		}
-	}
-
-	return 0
 }
 
 func writeJSON(
