@@ -50,7 +50,6 @@ go build -o dns-inspector ./cmd/dns-inspector
 ### JSON Output
 
 Use `--json` to return structured DNS results.
-JSON output is supported for A, AAAA, MX, NS, TXT, CNAME, and SRV.
 
 
 ```bash
@@ -69,7 +68,7 @@ Example response:
 }
 ```
 
-JSON output is supported for A, AAAA, MX, NS, TXT, and CNAME.
+JSON output is supported for A, AAAA, MX, NS, TXT, CNAME, and SRV
 All records are represented as strings. Errors are written to stderr,
 and existing exit codes are preserved.
 
