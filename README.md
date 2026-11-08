@@ -8,15 +8,13 @@ A lightweight DNS inspection CLI for technical OSINT and DNS troubleshooting.
 
 ## Features
 
-- **A** (IPv4), **AAAA** (IPv6), **MX** (mail servers), **NS** (name servers), **TXT**, and **CNAME** lookups
+- **A** (IPv4), **AAAA** (IPv6), **MX** (mail servers), **NS** (name servers), **TXT**, **CNAME**, and **SRV** lookups
 - Five-second DNS lookup timeout
 - Exit codes: `0` success, `1` lookup/output/no-record error, `2` invalid arguments
 - DNS resolution using Go's standard library
 - Optional JSON output (`--json`) for scripting and automation
 
 ## Planned Features
-- Refactor CLI `Run()` into smaller, testable functions for argument parsing, DNS lookups, and output formatting.
-- SRV record lookups (service discovery)
 - PTR record lookups (reverse DNS)
 - SOA record lookups (zone authority information)
 - CAA record lookups (certificate authority authorization)
@@ -31,9 +29,14 @@ go run ./cmd/dns-inspector --type MX example.com
 go run ./cmd/dns-inspector --type NS example.com
 go run ./cmd/dns-inspector --type TXT example.com
 go run ./cmd/dns-inspector --type CNAME www.example.com
+go run ./cmd/dns-inspector --type SRV _sip._tcp.example.com
 ```
 CNAME lookups display the canonical target name. If the resolved name
 matches the queried domain, the CLI reports that no CNAME alias was found.
+
+SRV lookups use a fully qualified service name, such as
+`_sip._tcp.example.com`. Results contain priority, weight,
+port, and target in that order.
 
 Build a standalone binary (Docker not required):
 
@@ -47,6 +50,7 @@ go build -o dns-inspector ./cmd/dns-inspector
 ### JSON Output
 
 Use `--json` to return structured DNS results.
+JSON output is supported for A, AAAA, MX, NS, TXT, CNAME, and SRV.
 
 
 ```bash
