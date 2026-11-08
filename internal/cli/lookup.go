@@ -101,6 +101,30 @@ func lookupRecords(
 
 		return []string{cname}, nil
 
+	case dns.RecordTypeSRV:
+		srvResolver, ok := resolver.(dns.SRVResolver)
+		if !ok {
+			return nil, errors.New("resolver does not support SRV lookups")
+		}
+
+		srvRecords, err := dns.LookupSRV(ctx, srvResolver, domain)
+		if err != nil {
+			return nil, err
+		}
+
+		records := make([]string, 0, len(srvRecords))
+		for _, record := range srvRecords {
+			records = append(records, fmt.Sprintf(
+				"%d %d %d %s",
+				record.Priority,
+				record.Weight,
+				record.Port,
+				record.Target,
+			))
+		}
+
+		return records, nil
+
 	default:
 		return nil, fmt.Errorf("unsupported record type: %s", recordType)
 	}
