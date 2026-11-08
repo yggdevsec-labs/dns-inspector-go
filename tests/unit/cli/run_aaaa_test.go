@@ -154,7 +154,7 @@ func TestRunUnsupportedRecordType(t *testing.T) {
 				t.Errorf("expected exit code 2, got %d", code)
 			}
 
-			expected := "Unsupported record type: use A, AAAA, MX, NS, TXT or CNAME\n"
+			expected := "Unsupported record type: use A, AAAA, MX, NS, TXT, CNAME or SRV\n"
 			if errorOutput.String() != expected {
 				t.Errorf("expected %q, got %q", expected, errorOutput.String())
 			}
