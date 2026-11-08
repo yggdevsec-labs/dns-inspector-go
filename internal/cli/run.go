@@ -2,7 +2,6 @@ package cli
 
 import (
 	"context"
-	"encoding/json"
 	"fmt"
 	"io"
 	"strings"
@@ -60,28 +59,4 @@ func Run(args []string, output, errorOutput io.Writer, resolver dns.IPResolver) 
 
 	return writeOutput(output, errorOutput, opts, records)
 
-}
-
-func writeJSON(
-	output, errorOutput io.Writer,
-	domain string,
-	recordType dns.RecordType,
-	records []string,
-) int {
-	result := struct {
-		Domain  string         `json:"domain"`
-		Type    dns.RecordType `json:"type"`
-		Records []string       `json:"records"`
-	}{
-		Domain:  domain,
-		Type:    recordType,
-		Records: records,
-	}
-
-	if err := json.NewEncoder(output).Encode(result); err != nil {
-		_, _ = fmt.Fprintf(errorOutput, "Output failed: %v\n", err)
-		return 1
-	}
-
-	return 0
 }
