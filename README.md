@@ -8,14 +8,13 @@ A lightweight DNS inspection CLI for technical OSINT and DNS troubleshooting.
 
 ## Features
 
-- **A** (IPv4), **AAAA** (IPv6), **MX** (mail servers), **NS** (name servers), **TXT**, **CNAME**, and **SRV** lookups
+- **A** (IPv4), **AAAA** (IPv6), **MX** (mail servers), **NS** (name servers), **TXT**, **CNAME**, **SRV**, and **PTR** lookups
 - Five-second DNS lookup timeout
 - Exit codes: `0` success, `1` lookup/output/no-record error, `2` invalid arguments
 - DNS resolution using Go's standard library
 - Optional JSON output (`--json`) for scripting and automation
 
 ## Planned Features
-- PTR record lookups (reverse DNS)
 - SOA record lookups (zone authority information)
 - CAA record lookups (certificate authority authorization)
 - CLI help and version flags (`--help`, `--version`)
@@ -30,6 +29,8 @@ go run ./cmd/dns-inspector --type NS example.com
 go run ./cmd/dns-inspector --type TXT example.com
 go run ./cmd/dns-inspector --type CNAME www.example.com
 go run ./cmd/dns-inspector --type SRV _sip._tcp.example.com
+go run ./cmd/dns-inspector --type PTR 8.8.8.8
+go run ./cmd/dns-inspector --type PTR 2001:4860:4860::8888
 ```
 CNAME lookups display the canonical target name. If the resolved name
 matches the queried domain, the CLI reports that no CNAME alias was found.
@@ -37,6 +38,9 @@ matches the queried domain, the CLI reports that no CNAME alias was found.
 SRV lookups use a fully qualified service name, such as
 `_sip._tcp.example.com`. Results contain priority, weight,
 port, and target in that order.
+
+PTR lookups perform reverse DNS resolution for IPv4 and IPv6 addresses.
+The input must be a valid IP address rather than a domain name.
 
 Build a standalone binary (Docker not required):
 
@@ -68,7 +72,7 @@ Example response:
 }
 ```
 
-JSON output is supported for A, AAAA, MX, NS, TXT, CNAME, and SRV
+JSON output is supported for A, AAAA, MX, NS, TXT, CNAME, SRV, and PTR.
 All records are represented as strings. Errors are written to stderr,
 and existing exit codes are preserved.
 
