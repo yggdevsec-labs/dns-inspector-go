@@ -6,7 +6,7 @@ import (
 	"io"
 	"strings"
 	"time"
-
+	"net"
 	"github.com/yggdevsec-labs/dns-inspector-go/internal/dns"
 )
 
@@ -36,9 +36,16 @@ func Run(args []string, output, errorOutput io.Writer, resolver dns.IPResolver) 
 		return 2
 	}
 
-	if err := dns.ValidateDomain(opts.domain); err != nil {
-		_, _ = fmt.Fprintf(errorOutput, "Invalid domain: %v\n", err)
-		return 2
+	if opts.recordType == dns.RecordTypePTR {
+		if net.ParseIP(opts.domain) == nil {
+			_, _ = fmt.Fprintln(errorOutput, "Invalid IP address")
+			return 2
+		}
+	} else {
+		if err := dns.ValidateDomain(opts.domain); err != nil {
+			_, _ = fmt.Fprintf(errorOutput, "Invalid domain: %v\n", err)
+			return 2
+		}
 	}
 
 	ctx, cancel := context.WithTimeout(context.Background(), lookupTimeout)
