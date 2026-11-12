@@ -311,3 +311,106 @@ func TestLookupSOAFromServersCanceledContext(t *testing.T) {
 		t.Errorf("expected context.Canceled, got %v", err)
 	}
 }
+
+func TestLookupSOAFromServersRetryDNSFailure(t *testing.T) {
+	tests := []struct {
+		name string
+		code int
+	}{
+		{
+			name: "SERVFAIL",
+			code: mdns.RcodeServerFailure,
+		},
+		{
+			name: "REFUSED",
+			code: mdns.RcodeRefused,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			var firstCalled atomic.Bool
+			var secondCalled atomic.Bool
+
+			firstHandler := func(
+				w mdns.ResponseWriter,
+				request *mdns.Msg,
+			) {
+				firstCalled.Store(true)
+
+				response := new(mdns.Msg)
+				response.SetRcode(request, tt.code)
+
+				if err := w.WriteMsg(response); err != nil {
+					t.Errorf("write first DNS response: %v", err)
+				}
+			}
+
+			secondHandler := func(
+				w mdns.ResponseWriter,
+				request *mdns.Msg,
+			) {
+				secondCalled.Store(true)
+
+				response := new(mdns.Msg)
+				response.SetReply(request)
+				response.Answer = []mdns.RR{testSOARecord()}
+
+				if err := w.WriteMsg(response); err != nil {
+					t.Errorf("write second DNS response: %v", err)
+				}
+			}
+
+			port := startSOATestServer(
+				t,
+				"udp",
+				"127.0.0.1:0",
+				firstHandler,
+			)
+
+			startSOATestServer(
+				t,
+				"udp",
+				net.JoinHostPort("127.0.0.2", port),
+				secondHandler,
+			)
+
+			ctx, cancel := context.WithTimeout(
+				context.Background(),
+				5*time.Second,
+			)
+			defer cancel()
+
+			record, err := lookupSOAFromServers(
+				ctx,
+				"example.com",
+				[]string{"127.0.0.1", "127.0.0.2"},
+				port,
+			)
+
+			if err != nil {
+				t.Fatalf("unexpected error: %v", err)
+			}
+
+			if record == nil {
+				t.Fatal("expected SOA record from second server")
+			}
+
+			if !firstCalled.Load() {
+				t.Error("expected first DNS server to be queried")
+			}
+
+			if !secondCalled.Load() {
+				t.Error("expected fallback to second DNS server")
+			}
+
+			if record.NS != "ns1.example.com." {
+				t.Errorf("unexpected nameserver: %q", record.NS)
+			}
+
+			if record.Serial != 2026111201 {
+				t.Errorf("unexpected serial: %d", record.Serial)
+			}
+		})
+	}
+}
