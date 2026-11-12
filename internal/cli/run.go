@@ -3,11 +3,11 @@ package cli
 import (
 	"context"
 	"fmt"
+	"github.com/yggdevsec-labs/dns-inspector-go/internal/dns"
 	"io"
+	"net"
 	"strings"
 	"time"
-
-	"github.com/yggdevsec-labs/dns-inspector-go/internal/dns"
 )
 
 const lookupTimeout = 5 * time.Second
@@ -28,16 +28,24 @@ func Run(args []string, output, errorOutput io.Writer, resolver dns.IPResolver) 
 	switch opts.recordType {
 	case dns.RecordTypeA, dns.RecordTypeAAAA, dns.RecordTypeMX,
 		dns.RecordTypeNS, dns.RecordTypeTXT, dns.RecordTypeCNAME,
+		dns.RecordTypePTR,
 		dns.RecordTypeSRV:
 	default:
 		_, _ = fmt.Fprintln(errorOutput,
-			"Unsupported record type: use A, AAAA, MX, NS, TXT, CNAME or SRV")
+			"Unsupported record type: use A, AAAA, MX, NS, TXT, CNAME, SRV or PTR")
 		return 2
 	}
 
-	if err := dns.ValidateDomain(opts.domain); err != nil {
-		_, _ = fmt.Fprintf(errorOutput, "Invalid domain: %v\n", err)
-		return 2
+	if opts.recordType == dns.RecordTypePTR {
+		if net.ParseIP(opts.domain) == nil {
+			_, _ = fmt.Fprintln(errorOutput, "Invalid IP address")
+			return 2
+		}
+	} else {
+		if err := dns.ValidateDomain(opts.domain); err != nil {
+			_, _ = fmt.Fprintf(errorOutput, "Invalid domain: %v\n", err)
+			return 2
+		}
 	}
 
 	ctx, cancel := context.WithTimeout(context.Background(), lookupTimeout)
