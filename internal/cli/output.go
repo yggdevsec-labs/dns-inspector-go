@@ -37,7 +37,8 @@ func writeOutput(
 		var err error
 
 		if opts.recordType == dns.RecordTypeTXT ||
-			opts.recordType == dns.RecordTypeCNAME {
+			opts.recordType == dns.RecordTypeCNAME ||
+			opts.recordType == dns.RecordTypePTR {
 			_, err = fmt.Fprintf(output, "%q\n", record)
 		} else {
 			_, err = fmt.Fprintln(output, record)

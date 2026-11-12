@@ -125,7 +125,6 @@ func lookupRecords(
 
 		return records, nil
 
-	
 	case dns.RecordTypePTR:
 		ptrResolver, ok := resolver.(dns.PTRResolver)
 		if !ok {
@@ -133,7 +132,6 @@ func lookupRecords(
 		}
 
 		return dns.LookupPTR(ctx, ptrResolver, domain)
-
 
 	default:
 		return nil, fmt.Errorf("unsupported record type: %s", recordType)

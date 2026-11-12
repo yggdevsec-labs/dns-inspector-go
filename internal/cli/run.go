@@ -3,11 +3,11 @@ package cli
 import (
 	"context"
 	"fmt"
+	"github.com/yggdevsec-labs/dns-inspector-go/internal/dns"
 	"io"
+	"net"
 	"strings"
 	"time"
-	"net"
-	"github.com/yggdevsec-labs/dns-inspector-go/internal/dns"
 )
 
 const lookupTimeout = 5 * time.Second
