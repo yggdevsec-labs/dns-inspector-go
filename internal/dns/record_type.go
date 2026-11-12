@@ -11,4 +11,5 @@ const (
 	RecordTypeTXT   RecordType = "TXT"
 	RecordTypeCNAME RecordType = "CNAME"
 	RecordTypeSRV   RecordType = "SRV"
+	RecordTypePTR   RecordType = "PTR"
 )
