@@ -28,11 +28,10 @@ func Run(args []string, output, errorOutput io.Writer, resolver dns.IPResolver) 
 	switch opts.recordType {
 	case dns.RecordTypeA, dns.RecordTypeAAAA, dns.RecordTypeMX,
 		dns.RecordTypeNS, dns.RecordTypeTXT, dns.RecordTypeCNAME,
-		dns.RecordTypePTR,
-		dns.RecordTypeSRV:
+		dns.RecordTypePTR, dns.RecordTypeSRV, dns.RecordTypeSOA:
 	default:
 		_, _ = fmt.Fprintln(errorOutput,
-			"Unsupported record type: use A, AAAA, MX, NS, TXT, CNAME, SRV or PTR")
+			"Unsupported record type: use A, AAAA, MX, NS, TXT, CNAME, SRV, PTR or SOA")
 		return 2
 	}
 

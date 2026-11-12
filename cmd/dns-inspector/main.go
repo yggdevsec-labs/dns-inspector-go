@@ -1,10 +1,10 @@
 package main
 
 import (
-	"net"
 	"os"
 
 	"github.com/yggdevsec-labs/dns-inspector-go/internal/cli"
+	"github.com/yggdevsec-labs/dns-inspector-go/internal/dns"
 )
 
 func main() {
@@ -12,6 +12,6 @@ func main() {
 		os.Args[1:],
 		os.Stdout,
 		os.Stderr,
-		net.DefaultResolver,
+		dns.NewDNSResolver(),
 	))
 }

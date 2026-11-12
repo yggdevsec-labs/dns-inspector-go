@@ -12,4 +12,5 @@ const (
 	RecordTypeCNAME RecordType = "CNAME"
 	RecordTypeSRV   RecordType = "SRV"
 	RecordTypePTR   RecordType = "PTR"
+	RecordTypeSOA   RecordType = "SOA"
 )

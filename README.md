@@ -8,14 +8,13 @@ A lightweight DNS inspection CLI for technical OSINT and DNS troubleshooting.
 
 ## Features
 
-- **A** (IPv4), **AAAA** (IPv6), **MX** (mail servers), **NS** (name servers), **TXT**, **CNAME**, **SRV**, and **PTR** lookups
+- **A** (IPv4), **AAAA** (IPv6), **MX** (mail servers), **NS** (name servers), **TXT**, **CNAME**, **SRV**, **PTR**, and **SOA** lookups
 - Five-second DNS lookup timeout
 - Exit codes: `0` success, `1` lookup/output/no-record error, `2` invalid arguments
 - DNS resolution using Go's standard library
 - Optional JSON output (`--json`) for scripting and automation
 
 ## Planned Features
-- SOA record lookups (zone authority information)
 - CAA record lookups (certificate authority authorization)
 - CLI help and version flags (`--help`, `--version`)
 
@@ -31,6 +30,7 @@ go run ./cmd/dns-inspector --type CNAME www.example.com
 go run ./cmd/dns-inspector --type SRV _sip._tcp.example.com
 go run ./cmd/dns-inspector --type PTR 8.8.8.8
 go run ./cmd/dns-inspector --type PTR 2001:4860:4860::8888
+go run ./cmd/dns-inspector --type SOA example.com
 ```
 CNAME lookups display the canonical target name. If the resolved name
 matches the queried domain, the CLI reports that no CNAME alias was found.
@@ -41,6 +41,13 @@ port, and target in that order.
 
 PTR lookups perform reverse DNS resolution for IPv4 and IPv6 addresses.
 The input must be a valid IP address rather than a domain name.
+
+SOA lookups retrieve authority information for a DNS zone.
+Results include the primary name server, responsible mailbox, serial number,
+refresh interval, retry interval, expiration interval, and minimum TTL.
+
+The CLI displays these fields in that order. Time intervals are expressed
+in seconds. SOA queries use the DNS servers configured in `/etc/resolv.conf`.
 
 Build a standalone binary (Docker not required):
 
@@ -60,6 +67,7 @@ Use `--json` to return structured DNS results.
 go run ./cmd/dns-inspector --json example.com
 go run ./cmd/dns-inspector --type MX --json example.com
 go run ./cmd/dns-inspector --json --type TXT example.com
+go run ./cmd/dns-inspector --type SOA --json example.com
 ```
 
 Example response:
@@ -72,7 +80,7 @@ Example response:
 }
 ```
 
-JSON output is supported for A, AAAA, MX, NS, TXT, CNAME, SRV, and PTR.
+JSON output is supported for A, AAAA, MX, NS, TXT, CNAME, SRV, PTR, and SOA.
 All records are represented as strings. Errors are written to stderr,
 and existing exit codes are preserved.
 
