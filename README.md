@@ -42,12 +42,12 @@ port, and target in that order.
 PTR lookups perform reverse DNS resolution for IPv4 and IPv6 addresses.
 The input must be a valid IP address rather than a domain name.
 
-Results include the primary name server, responsible mailbox, serial number, refresh interval, retry interval, expiration interval, and minimum TTL.
-
-The CLI displays these fields in that order. Time intervals are expressed in seconds.
-
-SOA queries use the DNS servers configured in `/etc/resolv.conf`.
 SOA lookups retrieve authority information for a DNS zone.
+Results include the primary name server, responsible mailbox, serial number,
+refresh interval, retry interval, expiration interval, and minimum TTL.
+
+The CLI displays these fields in that order. Time intervals are expressed
+in seconds. SOA queries use the DNS servers configured in `/etc/resolv.conf`.
 
 Build a standalone binary (Docker not required):
 
