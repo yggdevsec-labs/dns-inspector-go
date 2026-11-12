@@ -22,6 +22,7 @@ func NewDNSResolver() *DNSResolver {
 }
 
 // LookupSOA queries the configured DNS servers for an SOA record.
+
 func (r *DNSResolver) LookupSOA(
 	ctx context.Context,
 	domain string,
@@ -31,7 +32,22 @@ func (r *DNSResolver) LookupSOA(
 		return nil, fmt.Errorf("read DNS configuration: %w", err)
 	}
 
-	if len(config.Servers) == 0 {
+	return lookupSOAFromServers(
+		ctx,
+		domain,
+		config.Servers,
+		config.Port,
+	)
+}
+
+// lookupSOAFromServers queries explicitly configured DNS servers.
+func lookupSOAFromServers(
+	ctx context.Context,
+	domain string,
+	servers []string,
+	port string,
+) (*SOARecord, error) {
+	if len(servers) == 0 {
 		return nil, errors.New("no DNS servers configured")
 	}
 
@@ -40,15 +56,23 @@ func (r *DNSResolver) LookupSOA(
 
 	var lastErr error
 
-	for _, server := range config.Servers {
-		address := net.JoinHostPort(server, config.Port)
+	for _, server := range servers {
+		address := net.JoinHostPort(server, port)
 
 		client := &mdns.Client{Net: "udp"}
-		response, _, err := client.ExchangeContext(ctx, request, address)
+		response, _, err := client.ExchangeContext(
+			ctx,
+			request,
+			address,
+		)
 
 		if err == nil && response != nil && response.Truncated {
 			client.Net = "tcp"
-			response, _, err = client.ExchangeContext(ctx, request, address)
+			response, _, err = client.ExchangeContext(
+				ctx,
+				request,
+				address,
+			)
 		}
 
 		if err != nil {
