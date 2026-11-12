@@ -125,6 +125,34 @@ func lookupRecords(
 
 		return records, nil
 
+	case dns.RecordTypeSOA:
+		soaResolver, ok := resolver.(dns.SOAResolver)
+		if !ok {
+			return nil, errors.New("resolver does not support SOA lookups")
+		}
+
+		soa, err := dns.LookupSOA(ctx, soaResolver, domain)
+		if err != nil {
+			return nil, err
+		}
+
+		if soa == nil {
+			return nil, nil
+		}
+
+		record := fmt.Sprintf(
+			"%q %q %d %d %d %d %d",
+			soa.NS,
+			soa.MBox,
+			soa.Serial,
+			soa.Refresh,
+			soa.Retry,
+			soa.Expire,
+			soa.MinTTL,
+		)
+
+		return []string{record}, nil
+
 	case dns.RecordTypePTR:
 		ptrResolver, ok := resolver.(dns.PTRResolver)
 		if !ok {
