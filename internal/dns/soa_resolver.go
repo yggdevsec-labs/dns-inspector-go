@@ -90,10 +90,18 @@ func lookupSOAFromServers(
 		}
 
 		if response.Rcode != mdns.RcodeSuccess {
-			return nil, fmt.Errorf(
+			responseErr := fmt.Errorf(
 				"SOA DNS response: %s",
 				mdns.RcodeToString[response.Rcode],
 			)
+
+			if response.Rcode == mdns.RcodeServerFailure ||
+				response.Rcode == mdns.RcodeRefused {
+				lastErr = responseErr
+				continue
+			}
+
+			return nil, responseErr
 		}
 
 		for _, answer := range response.Answer {
