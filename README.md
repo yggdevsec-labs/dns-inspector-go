@@ -8,14 +8,13 @@ A lightweight DNS inspection CLI for technical OSINT and DNS troubleshooting.
 
 ## Features
 
-- **A** (IPv4), **AAAA** (IPv6), **MX** (mail servers), **NS** (name servers), **TXT**, **CNAME**, **SRV**, **PTR**, and **SOA** lookups
+- **A** (IPv4), **AAAA** (IPv6), **MX** (mail servers), **NS** (name servers), **TXT**, **CNAME**, **SRV**, **PTR**, **SOA**, and **CAA** lookups
 - Five-second DNS lookup timeout
 - Exit codes: `0` success, `1` lookup/output/no-record error, `2` invalid arguments
-- DNS resolution using Go's standard library
+- DNS resolution using Go's standard library and `github.com/miekg/dns`
 - Optional JSON output (`--json`) for scripting and automation
 
 ## Planned Features
-- CAA record lookups (certificate authority authorization)
 - CLI help and version flags (`--help`, `--version`)
 
 ## Usage
@@ -31,6 +30,7 @@ go run ./cmd/dns-inspector --type SRV _sip._tcp.example.com
 go run ./cmd/dns-inspector --type PTR 8.8.8.8
 go run ./cmd/dns-inspector --type PTR 2001:4860:4860::8888
 go run ./cmd/dns-inspector --type SOA example.com
+go run ./cmd/dns-inspector --type CAA cloudflare.com
 ```
 CNAME lookups display the canonical target name. If the resolved name
 matches the queried domain, the CLI reports that no CNAME alias was found.
@@ -45,6 +45,15 @@ The input must be a valid IP address rather than a domain name.
 SOA lookups retrieve authority information for a DNS zone.
 Results include the primary name server, responsible mailbox, serial number,
 refresh interval, retry interval, expiration interval, and minimum TTL.
+
+CAA lookups retrieve Certificate Authority Authorization records for a domain.
+
+Each record contains a flag, a property tag, and a value. Common tags
+include `issue`, `issuewild`, and `iodef`.
+
+CAA lookups query the specified domain directly. They do not evaluate
+inherited CAA policies from parent domains or determine the effective
+certificate issuance policy.
 
 The CLI displays these fields in that order. Time intervals are expressed
 in seconds. SOA queries use the DNS servers configured in `/etc/resolv.conf`.
@@ -68,6 +77,7 @@ go run ./cmd/dns-inspector --json example.com
 go run ./cmd/dns-inspector --type MX --json example.com
 go run ./cmd/dns-inspector --json --type TXT example.com
 go run ./cmd/dns-inspector --type SOA --json example.com
+go run ./cmd/dns-inspector --type CAA --json cloudflare.com
 ```
 
 Example response:
@@ -80,7 +90,7 @@ Example response:
 }
 ```
 
-JSON output is supported for A, AAAA, MX, NS, TXT, CNAME, SRV, PTR, and SOA.
+JSON output is supported for A, AAAA, MX, NS, TXT, CNAME, SRV, PTR, SOA, and CAA.
 All records are represented as strings. Errors are written to stderr,
 and existing exit codes are preserved.
 
@@ -98,6 +108,10 @@ docker run --rm -it \
   --mount "type=bind,source=$PWD,target=/workspace" \
   dns-inspector-go-dev
 ```
+
+If the default Docker DNS resolver does not return expected records,
+the development container can be started with an explicit DNS server,
+for example by adding `--dns 1.1.1.1` to `docker run`.
 
 Inside the container, run all local checks:
 
