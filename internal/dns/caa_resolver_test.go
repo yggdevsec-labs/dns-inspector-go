@@ -218,6 +218,60 @@ func TestLookupCAAFromServersTCPFallback(t *testing.T) {
 	}
 }
 
+func TestLookupCAAFromServersTruncatedTCP(t *testing.T) {
+	truncatedHandler := func(w mdns.ResponseWriter, request *mdns.Msg) {
+		response := new(mdns.Msg)
+		response.SetReply(request)
+		response.Truncated = true
+		response.Answer = testCAARecords()[:1]
+		if err := w.WriteMsg(response); err != nil {
+			t.Errorf("write truncated DNS response: %v", err)
+		}
+	}
+	port := startCAATestServer(t, "tcp", "127.0.0.1:0", truncatedHandler)
+	startCAATestServer(t, "udp", net.JoinHostPort("127.0.0.1", port), truncatedHandler)
+
+	t.Run("no next server", func(t *testing.T) {
+		ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+		defer cancel()
+
+		records, err := lookupCAAFromServers(ctx, "example.com", []string{"127.0.0.1"}, port)
+		if err == nil || !strings.Contains(err.Error(), "truncated TCP DNS response") {
+			t.Errorf("expected TCP truncation error, got %v", err)
+		}
+		if len(records) != 0 {
+			t.Errorf("expected no partial CAA records, got %+v", records)
+		}
+	})
+
+	t.Run("next server answers", func(t *testing.T) {
+		completeHandler := func(w mdns.ResponseWriter, request *mdns.Msg) {
+			response := new(mdns.Msg)
+			response.SetReply(request)
+			response.Answer = testCAARecords()[1:]
+			if err := w.WriteMsg(response); err != nil {
+				t.Errorf("write complete DNS response: %v", err)
+			}
+		}
+		startCAATestServer(t, "udp", net.JoinHostPort("127.0.0.2", port), completeHandler)
+
+		ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+		defer cancel()
+
+		records, err := lookupCAAFromServers(ctx, "example.com", []string{"127.0.0.1", "127.0.0.2"}, port)
+		if err != nil {
+			t.Fatalf("unexpected error: %v", err)
+		}
+		want := []CAARecord{
+			{Tag: "issuewild", Value: "digicert.com"},
+			{Flag: 128, Tag: "iodef", Value: "mailto:security@example.com"},
+		}
+		if !reflect.DeepEqual(records, want) {
+			t.Errorf("expected records from the next server: %+v, got %+v", want, records)
+		}
+	})
+}
+
 func TestLookupCAAFromServersFailover(t *testing.T) {
 	tests := []struct {
 		name string

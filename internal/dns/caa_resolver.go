@@ -76,6 +76,11 @@ func lookupCAAFromServers(
 			continue
 		}
 
+		if response.Truncated {
+			lastErr = fmt.Errorf("truncated TCP DNS response from %s", address)
+			continue
+		}
+
 		if response.Rcode != mdns.RcodeSuccess {
 			responseErr := fmt.Errorf(
 				"CAA DNS response: %s",
