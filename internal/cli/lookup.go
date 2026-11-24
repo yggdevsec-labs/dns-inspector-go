@@ -161,6 +161,30 @@ func lookupRecords(
 
 		return dns.LookupPTR(ctx, ptrResolver, domain)
 
+	case dns.RecordTypeCAA:
+		caaResolver, ok := resolver.(dns.CAAResolver)
+		if !ok {
+			return nil, errors.New("resolver does not support CAA lookups")
+		}
+
+		caaRecords, err := dns.LookupCAA(ctx, caaResolver, domain)
+		if err != nil {
+			return nil, err
+		}
+
+		records := make([]string, 0, len(caaRecords))
+
+		for _, record := range caaRecords {
+			records = append(records, fmt.Sprintf(
+				"%d %q %q",
+				record.Flag,
+				record.Tag,
+				record.Value,
+			))
+		}
+
+		return records, nil
+
 	default:
 		return nil, fmt.Errorf("unsupported record type: %s", recordType)
 	}
