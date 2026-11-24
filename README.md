@@ -28,7 +28,6 @@ A lightweight DNS inspection CLI for technical OSINT and DNS troubleshooting.
 
 ### DNS Record Support
 
-- **CAA** — Certificate Authority Authorization records.
 - **DS and DNSKEY** — DNSSEC delegation and public-key inspection.
 - **RRSIG, NSEC, and NSEC3** — Additional DNSSEC record inspection.
 - **HTTPS and SVCB** — Modern service binding and HTTPS connection metadata.
