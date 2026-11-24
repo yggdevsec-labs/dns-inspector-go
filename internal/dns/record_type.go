@@ -13,4 +13,5 @@ const (
 	RecordTypeSRV   RecordType = "SRV"
 	RecordTypePTR   RecordType = "PTR"
 	RecordTypeSOA   RecordType = "SOA"
+	RecordTypeCAA   RecordType = "CAA"
 )
