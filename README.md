@@ -15,7 +15,33 @@ A lightweight DNS inspection CLI for technical OSINT and DNS troubleshooting.
 - Optional JSON output (`--json`) for scripting and automation
 
 ## Planned Features
-- CLI help and version flags (`--help`, `--version`)
+
+### CLI Improvements
+
+- **File output (`--output`)** — Save DNS lookup results as text or JSON.
+- **Overwrite protection (`--force`)** — Prevent accidental overwriting of existing files. Require `--force` to replace them.
+- **Multiple record types (`--types`)** — Query selected DNS record types in a single command, for example `--types A,AAAA,MX,NS`.
+- **Common record preset (`--common`)** — Query a predefined set of common DNS record types. PTR and SRV are excluded because they require different input formats.
+- **DNS server selection (`--server`)** — Specify a DNS resolver instead of relying on the system default.
+- **Transport selection (`--tcp`)** — Allow explicit TCP selection for DNS queries.
+- **Help and version flags (`--help`, `--version`)** — Improve CLI usability.
+
+### DNS Record Support
+
+- **CAA** — Certificate Authority Authorization records.
+- **DS and DNSKEY** — DNSSEC delegation and public-key inspection.
+- **RRSIG, NSEC, and NSEC3** — Additional DNSSEC record inspection.
+- **HTTPS and SVCB** — Modern service binding and HTTPS connection metadata.
+- **TLSA** — DANE-related TLS certificate information.
+- **SSHFP** — SSH public-key fingerprints.
+- **NAPTR** — Naming Authority Pointer records.
+
+### Output and Reporting
+
+- Structured JSON output for queries containing multiple record types.
+- Individual lookup results and error status for each requested record type.
+- Safe file writing that avoids partially written reports.
+- Structured SOA and CAA fields in JSON output.
 
 ## Usage
 
