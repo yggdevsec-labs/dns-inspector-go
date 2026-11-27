@@ -14,27 +14,6 @@ A lightweight command-line tool for DNS inspection, troubleshooting, and technic
 - Validate domain names and PTR IP-address inputs before performing lookups.
 - Return meaningful exit codes and send errors to standard error (`stderr`).
 
-## Planned Features
-
-### CLI Improvements
-
-- **File output (`--output`)** — Save DNS lookup results as text or JSON.
-- **Overwrite protection (`--force`)** — Prevent accidental overwriting of existing files. Require `--force` to replace them.
-- **Multiple record types (`--types`)** — Query selected DNS record types in a single command, for example `--types A,AAAA,MX,NS`.
-- **Common record preset (`--common`)** — Query a predefined set of common DNS record types. PTR and SRV are excluded because they require different input formats.
-- **DNS server selection (`--server`)** — Specify a DNS resolver instead of relying on the system default.
-- **Transport selection (`--tcp`)** — Allow explicit TCP selection for DNS queries.
-- **Help and version flags (`--help`, `--version`)** — Improve CLI usability.
-
-### DNS Record Support
-
-- **DS and DNSKEY** — DNSSEC delegation and public-key inspection.
-- **RRSIG, NSEC, and NSEC3** — Additional DNSSEC record inspection.
-- **HTTPS and SVCB** — Modern service binding and HTTPS connection metadata.
-- **TLSA** — DANE-related TLS certificate information.
-- **SSHFP** — SSH public-key fingerprints.
-- **NAPTR** — Naming Authority Pointer records.
-
 ## Requirements
 
 - **Go 1.27.3 or newer** to install or build from source (as declared in `go.mod`).
@@ -227,4 +206,4 @@ GitHub Actions checks formatting, linting, tests, vulnerabilities (govulncheck),
 
 ## License
 
-
+No `LICENSE` file has been published yet. Public availability of the source code does not, by itself, grant permission to reuse, modify, or redistribute it. A license must be selected and added before describing this project as open source.
