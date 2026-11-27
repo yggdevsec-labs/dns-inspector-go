@@ -1,18 +1,18 @@
+
 > **Status: Work in Progress (WIP)**
 >
-> This project is under active development. Features may change.
+> DNS Inspector is under active development. Features and interfaces may change.
 
 # DNS Inspector (Go)
 
-A lightweight DNS inspection CLI for technical OSINT and DNS troubleshooting.
+A lightweight command-line tool for DNS inspection, troubleshooting, and technical OSINT. Query individual DNS record types and read results as text or JSON.
 
 ## Features
 
-- **A** (IPv4), **AAAA** (IPv6), **MX** (mail servers), **NS** (name servers), **TXT**, **CNAME**, **SRV**, **PTR**, **SOA**, and **CAA** lookups
-- Five-second DNS lookup timeout
-- Exit codes: `0` success, `1` lookup/output/no-record error, `2` invalid arguments
-- DNS resolution using Go's standard library and `github.com/miekg/dns`
-- Optional JSON output (`--json`) for scripting and automation
+- Look up **A, AAAA, MX, NS, TXT, CNAME, SRV, PTR, SOA, and CAA** records.
+- Use plain-text output for interactive inspection or `--json` for scripts and automation.
+- Validate domain names and PTR IP-address inputs before performing lookups.
+- Return meaningful exit codes and send errors to standard error (`stderr`).
 
 ## Planned Features
 
@@ -35,123 +35,196 @@ A lightweight DNS inspection CLI for technical OSINT and DNS troubleshooting.
 - **SSHFP** — SSH public-key fingerprints.
 - **NAPTR** — Naming Authority Pointer records.
 
-### Output and Reporting
+## Requirements
 
-- Structured JSON output for queries containing multiple record types.
-- Individual lookup results and error status for each requested record type.
-- Safe file writing that avoids partially written reports.
-- Structured SOA and CAA fields in JSON output.
+- **Go 1.27.3 or newer** to install or build from source (as declared in `go.mod`).
+- Access to a working DNS resolver.
+- **Linux or a compatible environment with `/etc/resolv.conf` for SOA and CAA lookups.** Other platforms have not been verified for these two record types.
+
+## Installation
+
+### Install with Go
+
+```bash
+go install github.com/yggdevsec-labs/dns-inspector-go/cmd/dns-inspector@latest
+```
+
+Ensure your Go binary directory (usually `$(go env GOPATH)/bin`) is in your `PATH` so you can run `dns-inspector` from any directory.
+
+**Note:** No tagged releases or prebuilt binaries are currently published. `@latest` installs the latest version resolved by Go, not a pinned release.
+
+### Build from source
+
+```bash
+git clone https://github.com/yggdevsec-labs/dns-inspector-go.git
+cd dns-inspector-go
+go build -o dns-inspector ./cmd/dns-inspector
+./dns-inspector --type A example.com
+```
+
+The commands in the Usage section assume that `dns-inspector` is available in your `PATH`. If you built it locally and have not installed it, use `./dns-inspector` instead.
 
 ## Usage
 
-```bash
-go run ./cmd/dns-inspector example.com
-go run ./cmd/dns-inspector --type AAAA example.com
-go run ./cmd/dns-inspector --type MX example.com
-go run ./cmd/dns-inspector --type NS example.com
-go run ./cmd/dns-inspector --type TXT example.com
-go run ./cmd/dns-inspector --type CNAME www.example.com
-go run ./cmd/dns-inspector --type SRV _sip._tcp.example.com
-go run ./cmd/dns-inspector --type PTR 8.8.8.8
-go run ./cmd/dns-inspector --type PTR 2001:4860:4860::8888
-go run ./cmd/dns-inspector --type SOA example.com
-go run ./cmd/dns-inspector --type CAA cloudflare.com
-```
-CNAME lookups display the canonical target name. If the resolved name
-matches the queried domain, the CLI reports that no CNAME alias was found.
-
-SRV lookups use a fully qualified service name, such as
-`_sip._tcp.example.com`. Results contain priority, weight,
-port, and target in that order.
-
-PTR lookups perform reverse DNS resolution for IPv4 and IPv6 addresses.
-The input must be a valid IP address rather than a domain name.
-
-SOA lookups retrieve authority information for a DNS zone.
-Results include the primary name server, responsible mailbox, serial number,
-refresh interval, retry interval, expiration interval, and minimum TTL.
-
-CAA lookups retrieve Certificate Authority Authorization records for a domain.
-
-Each record contains a flag, a property tag, and a value. Common tags
-include `issue`, `issuewild`, and `iodef`.
-
-CAA lookups query the specified domain directly. They do not evaluate
-inherited CAA policies from parent domains or determine the effective
-certificate issuance policy.
-
-The CLI displays these fields in that order. Time intervals are expressed
-in seconds. SOA queries use the DNS servers configured in `/etc/resolv.conf`.
-
-Build a standalone binary (Docker not required):
-
+An A-record lookup is the default when `--type` is omitted.
 
 ```bash
-go build -o dns-inspector ./cmd/dns-inspector
-./dns-inspector --type TXT example.com
+dns-inspector example.com
+dns-inspector --type AAAA example.com
+dns-inspector --type MX example.com
+dns-inspector --type NS example.com
+dns-inspector --type TXT example.com
+dns-inspector --type CNAME www.example.com
+dns-inspector --type SRV _sip._tcp.example.com
+dns-inspector --type PTR 8.8.8.8
+dns-inspector --type PTR 2001:4860:4860::8888
+dns-inspector --type SOA example.com
+dns-inspector --type CAA cloudflare.com
 ```
 
+Record type names are case-insensitive. Each invocation queries one record type.
 
-### JSON Output
+**Record-specific behavior:**
 
-Use `--json` to return structured DNS results.
+- **CNAME:** Displays the canonical target. If the target matches the queried name, the CLI reports that no CNAME alias was found.
+- **SRV:** Requires a service-specific DNS name such as `_sip._tcp.example.com`. Each result contains priority, weight, port, and target.
+- **PTR:** Requires a valid IPv4 or IPv6 address rather than a domain name.
+- **SOA:** Displays primary name server, responsible mailbox, serial, refresh, retry, expire, and minimum TTL, in that order. Time values are in seconds.
+- **CAA:** Displays each record's flag, tag, and value. This is a direct lookup only; the tool does **not** evaluate inherited CAA policies or determine the effective certificate-issuance policy.
 
+### Example text output
+
+Example A and MX responses observed for `example.com` (live DNS answers can change):
+
+```text
+$ dns-inspector --type A example.com
+104.20.23.154
+172.66.147.243
+
+$ dns-inspector --type MX example.com
+0 .
+```
+
+The MX response `0 .` is a **Null MX** record, indicating that the domain does not accept email.
+
+### JSON output
+
+Add `--json` to return machine-readable results:
 
 ```bash
-go run ./cmd/dns-inspector --json example.com
-go run ./cmd/dns-inspector --type MX --json example.com
-go run ./cmd/dns-inspector --json --type TXT example.com
-go run ./cmd/dns-inspector --type SOA --json example.com
-go run ./cmd/dns-inspector --type CAA --json cloudflare.com
+dns-inspector --json example.com
+dns-inspector --type MX --json example.com
+dns-inspector --json --type TXT example.com
+dns-inspector --type SOA --json example.com
+dns-inspector --type CAA --json cloudflare.com
 ```
 
-Example response:
+Example JSON for the A records shown above, formatted for readability (the CLI emits compact JSON):
 
 ```json
 {
   "domain": "example.com",
   "type": "A",
-  "records": ["192.0.2.1"]
+  "records": [
+    "104.20.23.154",
+    "172.66.147.243"
+  ]
 }
 ```
 
-JSON output is supported for A, AAAA, MX, NS, TXT, CNAME, SRV, PTR, SOA, and CAA.
-All records are represented as strings. Errors are written to stderr,
-and existing exit codes are preserved.
+All ten supported record types use the same JSON structure. Entries in `records` are strings, including formatted SOA and CAA records.
 
+### DNS resolution and exit codes
 
+The CLI uses the machine's configured DNS resolution settings; an explicit `--server` option is **not yet supported**. There are two implementation paths:
 
+- **A, AAAA, MX, NS, TXT, CNAME, SRV, and PTR:** Use Go's standard-library resolver, which follows the system resolver configuration.
+- **SOA and CAA:** Use `github.com/miekg/dns` and read DNS servers directly from `/etc/resolv.conf`. These queries use UDP with TCP fallback for truncated responses.
 
-## Development with Docker (optional)
+A lookup has a **five-second timeout**. The CLI returns the following exit codes:
 
-Requires a Docker-compatible container engine and Docker CLI. Docker Desktop and VS Code are **not** required. Run from the repository root in a Bash-compatible shell:
+| Exit code | Meaning |
+| --- | --- |
+| `0` | Lookup succeeded and output was written. |
+| `1` | DNS lookup failed, no matching records were found, or output could not be written. |
+| `2` | Invalid arguments, unsupported record type, or invalid input. |
+
+Errors are written to `stderr`.
+
+## Development
+
+From a checked-out repository, use `go run` for development and testing:
 
 ```bash
-docker info
+go run ./cmd/dns-inspector --type A example.com
+go run ./cmd/dns-inspector --type CAA cloudflare.com
+./scripts/check.sh
+```
+
+The check script formats Go files, runs tests with race detection, and runs golangci-lint. Formatting may modify source files.
+
+### Development with Docker (optional)
+
+A Docker-compatible container engine and Docker CLI are required. Run from the repository root in a Bash-compatible shell:
+
+```bash
 docker build -f .devcontainer/Dockerfile -t dns-inspector-go-dev .
 docker run --rm -it \
   --mount "type=bind,source=$PWD,target=/workspace" \
   dns-inspector-go-dev
 ```
 
-If the default Docker DNS resolver does not return expected records,
-the development container can be started with an explicit DNS server,
-for example by adding `--dns 1.1.1.1` to `docker run`.
-
-Inside the container, run all local checks:
+If Docker's default DNS server fails to return expected records, start the container with an explicit DNS server:
 
 ```bash
-./scripts/check.sh
+docker run --rm -it \
+  --dns 1.1.1.1 \
+  --mount "type=bind,source=$PWD,target=/workspace" \
+  dns-inspector-go-dev
 ```
 
-The script formats Go files, runs tests with race detection, and runs golangci-lint. Formatting may modify source files. Run `exit` to leave the container; source files remain on the host.
+Inside the container, run `./scripts/check.sh`. Type `exit` to leave the container. Docker is only a development option; it is not required to run the compiled executable.
 
-Docker is for development only. End users can run the compiled binary without Docker or Go.
+## Roadmap
+
+The following features are **planned, not currently implemented**. Priorities and interfaces may change.
+
+### CLI improvements
+
+- **`--help` and `--version`:** Built-in usage information and version reporting.
+- **`--output`:** Save text or JSON results to a file.
+- **`--force`:** Explicitly allow overwriting an existing output file.
+- **`--server`:** Query a user-selected DNS server.
+- **`--tcp`:** Explicitly select TCP for DNS queries.
+- **`--types`:** Query selected record types in one command, such as `--types A,AAAA,MX,NS`.
+- **`--common`:** Query a documented set of common record types; exclude PTR and SRV because their inputs differ.
+
+### Additional DNS record types
+
+- **DNSSEC and delegation:** DS, DNSKEY, RRSIG, NSEC, NSEC3, CDS, CDNSKEY, ZONEMD, and CSYNC.
+- **Modern services and transport security:** HTTPS, SVCB, TLSA, SSHFP, DNAME, and NAPTR.
+- **Certificate and email security:** CERT, SMIMEA, and OPENPGPKEY.
+- **Other specialized records:** URI, LOC, RP, HINFO, and DHCID, subject to demand.
+
+DNSSEC record inspection would not, by itself, provide full cryptographic DNSSEC validation.
+
+### Output and reporting
+
+- Structured JSON values for SOA and CAA instead of a single formatted record string.
+- Per-type results, errors, and status for multi-record queries.
+- Safe file writing that avoids partial reports.
+
+### Design decisions
+
+A general `--all` flag is **not currently planned**. DNS record types do not all accept the same inputs: PTR requires an IP address, and SRV usually requires a service-specific name. Explicit `--types` selection and a documented `--common` preset are more predictable.
+
+`ANY` is a special DNS query type, not a reliable way to retrieve every record type.
 
 ## CI
 
 GitHub Actions checks formatting, linting, tests, vulnerabilities (govulncheck), secrets (Gitleaks), and workflow syntax (actionlint).
 
-## Scope
 
-Standard DNS lookups only. No port scanning, brute-forcing, or automated subdomain enumeration.
+## License
+
+
