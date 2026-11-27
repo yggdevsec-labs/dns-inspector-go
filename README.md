@@ -4,6 +4,9 @@
 > DNS Inspector is under active development. Features and interfaces may change.
 
 # DNS Inspector (Go)
+[![CI](https://github.com/yggdevsec-labs/dns-inspector-go/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/yggdevsec-labs/dns-inspector-go/actions/workflows/ci.yml)
+[![Lint](https://img.shields.io/github/check-runs/yggdevsec-labs/dns-inspector-go/main?nameFilter=Lint%20and%20Format&label=lint)](https://github.com/yggdevsec-labs/dns-inspector-go/actions/workflows/ci.yml)
+[![Go Version](https://img.shields.io/github/go-mod/go-version/yggdevsec-labs/dns-inspector-go?filename=go.mod)](https://github.com/yggdevsec-labs/dns-inspector-go/blob/main/go.mod)
 
 A lightweight command-line tool for DNS inspection, troubleshooting, and technical OSINT. Query individual DNS record types and read results as text or JSON.
 
@@ -193,17 +196,13 @@ DNSSEC record inspection would not, by itself, provide full cryptographic DNSSEC
 - Per-type results, errors, and status for multi-record queries.
 - Safe file writing that avoids partial reports.
 
-### Design decisions
-
-A general `--all` flag is **not currently planned**. DNS record types do not all accept the same inputs: PTR requires an IP address, and SRV usually requires a service-specific name. Explicit `--types` selection and a documented `--common` preset are more predictable.
-
-`ANY` is a special DNS query type, not a reliable way to retrieve every record type.
 
 ## CI
 
 GitHub Actions checks formatting, linting, tests, vulnerabilities (govulncheck), secrets (Gitleaks), and workflow syntax (actionlint).
 
-
 ## License
 
-No `LICENSE` file has been published yet. Public availability of the source code does not, by itself, grant permission to reuse, modify, or redistribute it. A license must be selected and added before describing this project as open source.
+This project is licensed under the MIT License.
+
+See the [LICENSE](LICENSE) file for the full license text.
